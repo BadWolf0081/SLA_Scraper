@@ -299,12 +299,13 @@ def send_email(email_address: str, attachment_path: str, subject: str):
     try:
         # Use mail command with attachment
         cmd = f'echo "Please find attached the SLA batch report." | mail -s "{subject}" -A "{attachment_path}" {email_address}'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
         if result.returncode == 0:
             print(f"Email sent successfully to {email_address}")
         else:
-            print(f"Failed to send email: {result.stderr}")
+            stderr_output = result.stderr.decode('utf-8') if result.stderr else ''
+            print(f"Failed to send email: {stderr_output}")
     except Exception as e:
         print(f"Error sending email: {e}")
 
@@ -368,7 +369,7 @@ Examples:
         first_of_current_month = today.replace(day=1)
         last_of_prev_month = first_of_current_month - timedelta(days=1)
         prev_month_name = calendar.month_name[last_of_prev_month.month]
-        output_file = f"SLA-{prev_month_name}.xls"
+        output_file = f"SLA-{prev_month_name}.csv"
     
     # Process files
     parser = BatchJobParser()
