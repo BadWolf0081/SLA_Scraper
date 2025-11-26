@@ -286,27 +286,37 @@ class BatchJobParser:
         print(f"Total records: {len(records)}")
 
 
-def send_email(email_address: str, attachment_path: str, subject: str):
-    """Send email with attachment using mail command (Linux/Unix)."""
+def send_email(email_addresses: str, attachment_path: str, subject: str):
+    """Send email with attachment using mail command (Linux/Unix).
+    
+    Args:
+        email_addresses: Single email or comma-separated list of emails
+        attachment_path: Path to file to attach
+        subject: Email subject line
+    """
     import subprocess
     import platform
     
+    # Split comma-separated emails and clean whitespace
+    recipients = [email.strip() for email in email_addresses.split(',')]
+    
     if platform.system() == 'Windows':
-        print(f"Email sending skipped on Windows. Would send to: {email_address}")
+        print(f"Email sending skipped on Windows. Would send to: {', '.join(recipients)}")
         print(f"Attachment: {attachment_path}")
         return
     
     try:
         # Use mail command with attachment (lowercase -a is more widely supported)
         body = "Please find attached the SLA batch report."
-        cmd = ['mail', '-s', subject, '-a', attachment_path, email_address]
+        # Add all recipients to command
+        cmd = ['mail', '-s', subject, '-a', attachment_path] + recipients
         
         # Run mail command with body as stdin
         result = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = result.communicate(input=body.encode('utf-8'))
         
         if result.returncode == 0:
-            print(f"Email sent successfully to {email_address}")
+            print(f"Email sent successfully to {', '.join(recipients)}")
         else:
             stderr_output = stderr.decode('utf-8') if stderr else ''
             print(f"Failed to send email: {stderr_output}")
