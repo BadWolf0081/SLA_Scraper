@@ -297,14 +297,18 @@ def send_email(email_address: str, attachment_path: str, subject: str):
         return
     
     try:
-        # Use mail command with attachment
-        cmd = f'echo "Please find attached the SLA batch report." | mail -s "{subject}" -A "{attachment_path}" {email_address}'
-        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Use mail command with attachment (lowercase -a is more widely supported)
+        body = "Please find attached the SLA batch report."
+        cmd = ['mail', '-s', subject, '-a', attachment_path, email_address]
+        
+        # Run mail command with body as stdin
+        result = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = result.communicate(input=body.encode('utf-8'))
         
         if result.returncode == 0:
             print(f"Email sent successfully to {email_address}")
         else:
-            stderr_output = result.stderr.decode('utf-8') if result.stderr else ''
+            stderr_output = stderr.decode('utf-8') if stderr else ''
             print(f"Failed to send email: {stderr_output}")
     except Exception as e:
         print(f"Error sending email: {e}")
